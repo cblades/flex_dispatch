@@ -6,7 +6,7 @@ class DispatchError(Exception):
     pass
 
 
-class Dispatcher:
+class dispatcher:
     """Decorator that turns a callable into a dispatcher for flex-dispatcher. 
     
     A dispatcher inspects its arguments and returns a "dispatch value", which can be anything.
@@ -38,6 +38,7 @@ class Dispatcher:
         update_wrapper(self, delegate)
         self.delegate = delegate
         self.method_mappings = []
+        self.extensions = []
 
     def __get__(self, obj, objtype=None): 
         """Capture receiving obj when we've decorated a method."""    
@@ -46,7 +47,13 @@ class Dispatcher:
         return self
 
     def __call__(self, *args, **kwargs):
-        dispatch_value = self.delegate(*args, **kwargs)
+        for extension in self.extensions:
+            dispatch_value = extension(*args, **kwargs)
+            if dispatch_value:
+                break
+        else:
+            dispatch_value = self.delegate(*args, **kwargs)
+            
         if not dispatch_value:
             raise DispatchError(
              f'Dispatch value could not be determined for function {self.delegate.__name__} for '
@@ -59,6 +66,9 @@ class Dispatcher:
 
         return receiver(*args, **kwargs)
     
+    def extend(self, fn: Callable):
+        self.extensions.append(fn)
+
     def map(self, dispatch_value, fn = None) -> Union[Callable[[Callable], Callable], None]:
         """Map callable to handle the given dispatch value.
         
@@ -92,10 +102,6 @@ class Dispatcher:
         return next(
             map(lambda m: m[1], filter(lambda m: m[0] == dispatch_value, self.method_mappings)), 
             None)
-
-
-def dispatcher(fn):
-    return Dispatcher(fn)
 
 __all__ = [
     'DispatchError',

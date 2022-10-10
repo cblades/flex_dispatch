@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "flex-dispatch"
-version = "0.1.1"
+version = "0.2.0"
 description = "Dynamic dispatch for python similar to clojure's multimethod."
 readme = "README.md"
 homepage = "https://github.com/cblades/flex_dispatch"
