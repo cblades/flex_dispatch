@@ -31,10 +31,10 @@ def say_message(name, msg):
     print(f'{msg} {name}')
 
 
-greet('Chris')
-greet('Bob', 'Boo')
+greet('Chris')   # calls say_hey and prints "Hello, Chris!"
+greet('Bob', 'Boo')  # calls say_message and prints "Boo Bob"
 
-greet('b', 'b', 3)
+greet('b', 'b', 3)  # greet returns none as a dispatch value, and DispatchError is raised.
 ```
 
 Any callable decorated with @Dispatcher becomes a dispatcher function.  It should inspect its arguments and return a "dispatch value"; i.e., a value used
