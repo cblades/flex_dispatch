@@ -1,9 +1,12 @@
+from functools import partial, update_wrapper
+from typing import Callable, Union
+
 class DispatchError(Exception):
     """Error arising while trying to dispatch a call."""
     pass
 
 
-class dispatcher:
+class Dispatcher:
     """Decorator that turns a callable into a dispatcher for flex-dispatcher. 
     
     A dispatcher inspects its arguments and returns a "dispatch value", which can be anything.
@@ -32,8 +35,15 @@ class dispatcher:
         greet('Frank')  # will dispatch to say_hey and print "Hello, Frank!"
     """
     def __init__(self, delegate):
+        update_wrapper(self, delegate)
         self.delegate = delegate
         self.method_mappings = []
+
+    def __get__(self, obj, objtype=None): 
+        """Capture receiving obj when we've decorated a method."""    
+        if obj:      
+            return partial(self.__call__, obj)
+        return self
 
     def __call__(self, *args, **kwargs):
         dispatch_value = self.delegate(*args, **kwargs)
@@ -42,14 +52,14 @@ class dispatcher:
              f'Dispatch value could not be determined for function {self.delegate.__name__} for '
              f'arguments {args}, {kwargs}')
 
-        for d, fn in self.method_mappings:
-            if d == dispatch_value:
-                return fn(*args, **kwargs)
-
-        raise DispatchError(f'No function mapped to dispatch value {dispatch_value} for '
+        receiver = self._get_receiver_for_dispatch_value(dispatch_value)
+        if not receiver:
+            raise DispatchError(f'No function mapped to dispatch value {dispatch_value} for '
                                 f'function {self.delegate.__name__}')
 
-    def map(self, dispatch_value, fn = None):
+        return receiver(*args, **kwargs)
+    
+    def map(self, dispatch_value, fn = None) -> Union[Callable[[Callable], Callable], None]:
         """Map callable to handle the given dispatch value.
         
         Can be used as a decorator or called directly and passed a callable.
@@ -62,6 +72,11 @@ class dispatcher:
         Or:
             greet.map('just_name', say_hey)
         """
+        if self._get_receiver_for_dispatch_value(dispatch_value):
+            raise DispatchError(
+                f'Reciever already mapped for dispatch value {dispatch_value} '
+                f'({self._get_receiver_for_dispatch_value((dispatch_value))}).')
+
         if fn and callable(fn):
             self.method_mappings.append((dispatch_value, fn))
         else:
@@ -73,6 +88,14 @@ class dispatcher:
 
             return _decorator
 
+    def _get_receiver_for_dispatch_value(self, dispatch_value):
+        return next(
+            map(lambda m: m[1], filter(lambda m: m[0] == dispatch_value, self.method_mappings)), 
+            None)
+
+
+def dispatcher(fn):
+    return Dispatcher(fn)
 
 __all__ = [
     'DispatchError',

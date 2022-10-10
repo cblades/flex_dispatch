@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "flex-dispatch"
-version = "0.1.0"
+version = "0.1.1"
 description = "Dynamic dispatch for python similar to clojure's multimethod."
 readme = "README.md"
+homepage = "https://github.com/cblades/flex_dispatch"
 authors = ["Chris Blades <chrisdblades@gmail.com>"]
 license = "Apache 2.0"
 packages = [
@@ -11,9 +12,10 @@ packages = [
 
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.1.3"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
