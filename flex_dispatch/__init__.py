@@ -59,6 +59,11 @@ class dispatcher:
              f'Dispatch value could not be determined for function {self.delegate.__name__} for '
              f'arguments {args}, {kwargs}')
 
+        if type(dispatch_value) == dispatcher.Static:
+            return dispatch_value.value
+        if type(dispatch_value) == dispatcher.Inline:
+            return dispatch_value.fn(*args, **kwargs)
+
         receiver = self._get_receiver_for_dispatch_value(dispatch_value)
         if not receiver:
             raise DispatchError(f'No function mapped to dispatch value {dispatch_value} for '
@@ -102,6 +107,14 @@ class dispatcher:
         return next(
             map(lambda m: m[1], filter(lambda m: m[0] == dispatch_value, self.method_mappings)), 
             None)
+
+    class Static:
+        def __init__(self, value: any) -> None:
+            self.value = value
+
+    class Inline:
+        def __init__(self, fn: Callable) -> None:
+            self.fn = fn
 
 __all__ = [
     'DispatchError',
