@@ -1,7 +1,7 @@
 flex_dispatch
 ==============================
 
-A super flexible dynamic dispatch implementation for python, inspired by Clojure's multimethod.
+A super flexible and extensible dynamic dispatch implementation for python.
 
 Install with: `pip install flex-dispatch`
 
@@ -42,3 +42,9 @@ to determine which callable to dispatch the call to.  Callables decorated with `
 
 In other words, when `greet('Chris')` is called, first the `greet` function is called to return a dispatch value, in this case `'_just_name'`.  Since `say_hey` was decorated with `@greet.amp('_just_name')`, it was registered as the target function to call when `greet` returns the dispatch value `'_just_name'`.
 
+Features
+------------
+
+1. Works on functions, methods, or any callable
+2. Extend the dispatch function to add new functionality to existing functions or classes (see tests/test_extending_function.py and tests/test_extending_method.py)
+3. A dispatcher can return static values or inline-callables for short and readable ways to implement common receivers (see examples/fibonacci.py)  

@@ -40,13 +40,14 @@ class dispatcher:
         self.method_mappings = []
         self.extensions = []
 
-    def __get__(self, obj, objtype=None): 
+    def __get__(self, obj, objtype=None) -> Union[Callable, 'dispatcher']: 
         """Capture receiving obj when we've decorated a method."""    
         if obj:      
             return partial(self.__call__, obj)
         return self
 
     def __call__(self, *args, **kwargs):
+        dispatch_value = None
         for extension in self.extensions:
             dispatch_value = extension(*args, **kwargs)
             if dispatch_value:
