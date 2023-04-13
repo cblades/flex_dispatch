@@ -37,7 +37,7 @@ class dispatcher:
     def __init__(self, delegate):
         update_wrapper(self, delegate)
         self.delegate = delegate
-        self.method_mappings = []
+        self.method_mappings = {}
         self.extensions = []
 
     def __get__(self, obj, objtype=None) -> Union[Callable, 'dispatcher']: 
@@ -65,12 +65,11 @@ class dispatcher:
         if type(dispatch_value) == dispatcher.Inline:
             return dispatch_value.fn(*args, **kwargs)
 
-        receiver = self._get_receiver_for_dispatch_value(dispatch_value)
-        if not receiver:
+        if dispatch_value not in self.method_mappings:
             raise DispatchError(f'No function mapped to dispatch value {dispatch_value} for '
                                 f'function {self.delegate.__name__}')
 
-        return receiver(*args, **kwargs)
+        return self.method_mappings.get(dispatch_value)(*args, **kwargs)
     
     def extend(self, fn: Callable):
         self.extensions.append(fn)
@@ -88,26 +87,21 @@ class dispatcher:
         Or:
             greet.map('just_name', say_hey)
         """
-        if self._get_receiver_for_dispatch_value(dispatch_value):
+        if dispatch_value in self.method_mappings:
             raise DispatchError(
                 f'Reciever already mapped for dispatch value {dispatch_value} '
-                f'({self._get_receiver_for_dispatch_value((dispatch_value))}).')
+                f'({self.method_mappings[dispatch_value]}).')
 
         if fn and callable(fn):
-            self.method_mappings.append((dispatch_value, fn))
+            self.method_mappings[dispatch_value] = fn
         else:
             def _decorator(fn):
-                self.method_mappings.append((dispatch_value, fn))
+                self.method_mappings[dispatch_value] = fn
 
                 def _wrapper(*args, **kwargs):
                     return fn(*args, **kwargs)
 
             return _decorator
-
-    def _get_receiver_for_dispatch_value(self, dispatch_value):
-        return next(
-            map(lambda m: m[1], filter(lambda m: m[0] == dispatch_value, self.method_mappings)), 
-            None)
 
     class Static:
         def __init__(self, value: any) -> None:
